@@ -12,7 +12,6 @@
     "latedef": true,
     "newcap": true,
     "noarg": true,
-    "quotmark": true,
     "regexp": true,
     "undef": true,
     "unused": true,
@@ -21,6 +20,7 @@
     "smarttabs": true,
     "globals": {
         "$": true,
+        "_": true,
         "jQuery": true
     }
 }

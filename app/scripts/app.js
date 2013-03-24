@@ -1,5 +1,5 @@
 /*global define */
-define(["gapi", "google", "rtclient"], function (gapi, google, rtclient) {
+define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtclient) {
   "use strict";
 
   var app = app || {};
@@ -15,11 +15,33 @@ define(["gapi", "google", "rtclient"], function (gapi, google, rtclient) {
     openProjectSelector: "#openProject",
     shareProjectSelector: "#shareProjectButton",
     projectNameSelector: "#projectName",
+    collaboratorsSelector: "#collaborators",
 
     updateProjectName: function () {
       if (app.meta) {
         $(app.ui.projectNameSelector).text(" / " + app.meta.title);
       }
+    },
+
+    updateCollaborators: function () {
+      if (app.document) {
+        $(app.ui.collaboratorsSelector).children().remove();
+        _.forEach(app.document.getCollaborators(), function (collaborator) {
+          console.log(collaborator);
+          var isYou = collaborator.isMe ? " (you)" : "";
+          var li = '<li><i class="icon-user" style="color:' + collaborator.color + ';"></i> ' + collaborator.displayName + isYou + '</li>';
+          $(app.ui.collaboratorsSelector).append(li);
+        });
+      }
+    }
+  };
+
+  app.collaborators = {
+    onCollaboratorJoined: function () {
+      app.ui.updateCollaborators();
+    },
+    onCollaboratorLeft: function () {
+      app.ui.updateCollaborators();
     }
   };
 
@@ -45,13 +67,16 @@ define(["gapi", "google", "rtclient"], function (gapi, google, rtclient) {
    */
   app.onFileLoaded = function (doc) {
     console.log("onFileLoad");
-    console.log(doc);
-    console.log(doc);
+
     app.document = doc;
     rtclient.getFileMetadata(null, function (m) {
       app.meta = m;
       app.ui.updateProjectName();
     });
+
+    app.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, app.collaborators.onCollaboratorJoined);
+    app.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, app.collaborators.onCollaboratorLeft);
+    app.ui.updateCollaborators();
 
     var string = doc.getModel().getRoot().get("text");
 
@@ -103,9 +128,6 @@ define(["gapi", "google", "rtclient"], function (gapi, google, rtclient) {
 
   // Popups the Sharing dialog.
   app.popupShare = function () {
-    console.log("SHARE DIALOG");
-    console.log(app.APP_ID);
-    console.log(rtclient.params.fileId);
     var shareClient = new gapi.drive.share.ShareClient(app.APP_ID);
     shareClient.setItemIds([rtclient.params.fileId]);
     shareClient.showSettingsDialog();

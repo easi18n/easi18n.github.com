@@ -19,12 +19,16 @@ module.exports = function (grunt) {
     config: {
       app: 'app',
       dist: 'dist',
+      tmp: '.tmp',
+      test: 'test',
       scripts: '<%= config.app %>/scripts',
       styles: '<%= config.app %>/styles',
       images: '<%= config.app %>/images',
       distScripts: '<%= config.dist %>/scripts',
       distStyles: '<%= config.dist %>/styles',
-      distImages: '<%= config.dist %>/images'
+      distImages: '<%= config.dist %>/images',
+      tmpScripts: '<%= config.tmp %>/scripts',
+      tmpStyles: '<%= config.tmp %>/styles'
     },
     watch: {
       recess: {
@@ -34,8 +38,8 @@ module.exports = function (grunt) {
       livereload: {
         files: [
           '<%= config.app %>/*.html',
-          '{.tmp,<%= config.styles %>}/{,*/}*.css',
-          '{.tmp,<%= config.scripts %>}/{,*/}*.js',
+          '{<%= config.tmpStyles %>,<%= config.styles %>}/{,*/}*.css',
+          '{<%= config.tmpScripts %>,<%= config.app %>}/{,*/}*.js',
           '<%= config.images %>/{,*/}*.{png,jpg,jpeg,webp}'
         ],
         tasks: ['livereload']
@@ -43,7 +47,7 @@ module.exports = function (grunt) {
     },
     connect: {
       options: {
-        port: 8080,
+        port: 9000,
         // change this to '0.0.0.0' to access the server from outside
         hostname: 'localhost'
       },
@@ -54,6 +58,7 @@ module.exports = function (grunt) {
               lrSnippet,
               mountFolder(connect, '.tmp'),
               mountFolder(connect, 'app')
+
             ];
           }
         }
@@ -79,8 +84,8 @@ module.exports = function (grunt) {
       }
     },
     clean: {
-      dist: ['.tmp', '!<%= config.dist %>/.git', '<%= config.dist %>/*'],
-      server: '.tmp'
+      dist: ['<%= config.tmp %>', '<%= config.dist %>/*', '!<%= config.dist %>/.git'],
+      server: '<%= config.tmp %>'
     },
     jshint: {
       options: {
