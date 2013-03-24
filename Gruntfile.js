@@ -220,6 +220,12 @@ module.exports = function (grunt) {
           cwd: '<%= config.app %>',
           src: '*.html',
           dest: '<%= config.dist %>'
+        },
+        {
+          expand: true,
+          cwd: '<%= config.app %>',
+          src: 'views/**/*.html',
+          dest: '<%= config.dist %>'
         }]
       }
     },
