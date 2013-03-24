@@ -226,7 +226,8 @@ module.exports = function (grunt) {
           dest: '<%= config.dist %>',
           src: [
             '*.{ico,txt}',
-            '.htaccess'
+            '.htaccess',
+            'README.md'
           ]
         }, {
           expand: true,
