@@ -1,4 +1,3 @@
-define(['gapi'], function (gapi) {
 /**
  * Copyright 2013 Google Inc. All Rights Reserved.
  *
@@ -376,6 +375,3 @@ rtclient.RealtimeLoader.prototype.createNewFileAndRedirect = function(fileName) 
         }
     });
 }
-
-return rtclient;
-});

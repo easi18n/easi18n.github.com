@@ -1,18 +1,18 @@
 <!doctype html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" data-ng-app="app" data-ng-controller="AppCtrl"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" data-ng-app="app" data-ng-controller="AppCtrl"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" data-ng-app="app" data-ng-controller="AppCtrl"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" data-ng-app="app" data-ng-controller="AppCtrl"> <!--<![endif]-->
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title></title>
+    <title>Easi18n</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- build:js scripts/vendor/modernizr.js -->
-    <script src="components/modernizr/modernizr.js"></script>
+      <script src="components/modernizr/modernizr.js"></script>
     <!-- endbuild -->
 </head>
 <body>
@@ -25,17 +25,17 @@
         <span class="icon-bar"></span>
       </a>
 
-      <a class="navbar-brand" href="#">Easi18n<span id="projectName"></span></a>
+      <a class="navbar-brand" href="#">Easi18n<span data-ng-show="data.projectName" class="ng-cloak"> / {{data.projectName}}</span></a>
 
       <div class="nav-collapse collapse navbar-responsive-collapse">
         <ul class="nav">
           <li class="divider"></li>
           <li>
-            <a id="newProject" data-toggle="modal" href="#modalCreateProject">New project</a>
+            <a id="newProject" data-toggle="modal" data-target="#modalCreateProject">New project</a>
           </li>
           <li class="divider"></li>
           <li>
-            <a id="openProject" href="#">Open project</a>
+            <a id="openProject">Open project</a>
           </li>
           <li class="divider"></li>
         </ul>
@@ -53,27 +53,7 @@
   <![endif]-->
 
   <div class="container">
-    <div class="row">
-      <div class="span12">
-        <p>These text areas are on the same page. You can also <a target="_blank" href="#">open them on separate users'
-          browsers</a> and they will remain synchronized.
-        </p>
-      </div>
-    </div>
-    <div class="row">
-      <div class="span4">
-        <textarea id="editor1" rows="15" cols="50" disabled="true"></textarea>
-      </div>
-      <div class="span4">
-        <textarea id="editor2" rows="15" cols="50" disabled="true"></textarea>
-      </div>
-      <div class="span4">
-        <div class="well">
-          <h3>Collaborators</h3>
-          <ul id="collaborators" class="list-unstyled"></ul>
-        </div>
-      </div>
-    </div>
+    <div data-ng-view="view"></div>
   </div>
 
   <div id="modalCreateProject" class="modal fade">
@@ -90,8 +70,8 @@
           <a href="#" class="btn" data-dismiss="modal">Close</a>
           <a href="#" class="btn btn-primary">Create</a>
         </div>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dalog -->
+      </div>
+    </div>
   </div>
 
 
@@ -103,8 +83,20 @@
     s.parentNode.insertBefore(g,s)}(document,'script'));
   </script>
 
+  <script src="//www.google.com/jsapi?key=AIzaSyA2BX2Be3VOhcY2AjZjGzBzhv56v0rYGGI"></script>
+  <script src="//apis.google.com/js/api.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.3/angular.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.3/angular-resource.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/1.0.1/lodash.min.js"></script>
+
   <!-- build:js scripts/main.js -->
-    <script data-main="scripts/main" src="components/requirejs/require.js"></script>
+    <script src="scripts/vendor/bootstrap.js"></script>
+    <script src="scripts/vendor/google/realtime-client-utils.js"></script>
+    <script src="scripts/app.js"></script>
   <!-- endbuild -->
+
+
+  <!--<script data-main="scripts/main" src="components/requirejs/require.js"></script>-->
 </body>
 </html>

@@ -37,7 +37,7 @@ module.exports = function (grunt) {
       },
       livereload: {
         files: [
-          '<%= config.app %>/*.html',
+          '<%= config.app %>/**/*.html',
           '{<%= config.tmpStyles %>,<%= config.styles %>}/{,*/}*.css',
           '{<%= config.tmpScripts %>,<%= config.app %>}/{,*/}*.js',
           '<%= config.images %>/{,*/}*.{png,jpg,jpeg,webp}'
@@ -125,7 +125,6 @@ module.exports = function (grunt) {
       }
     },
     concat: {
-      dist: {},
       bootstrap: {
         src: ['<%= config.scripts %>/vendor/bootstrap/bootstrap-transition.js',
           '<%= config.scripts %>/vendor/bootstrap/bootstrap-dropdown.js',
@@ -142,6 +141,13 @@ module.exports = function (grunt) {
           '<%= config.scripts %>/vendor/bootstrap/bootstrap-typeahead.js'
         ],
         dest: '<%= config.scripts %>/vendor/bootstrap.js'
+      },
+      dist: {
+        src: ['<%= config.scripts %>/vendor/bootstrap.js',
+          '<%= config.scripts %>/vendor/google/realtime-client-utils.js',
+          '<%= config.scripts %>/app.js'
+        ],
+        dest: '<%= config.distScripts %>/main.js'
       }
     },
     requirejs: {
@@ -278,7 +284,7 @@ module.exports = function (grunt) {
     'concat',
     'recess:dist',
     'useminPrepare',
-    'requirejs',
+    //'requirejs',
     'imagemin',
     'htmlmin',
     'cssmin',

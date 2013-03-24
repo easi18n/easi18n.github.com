@@ -1,47 +1,63 @@
-/*global define */
-define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtclient) {
-  "use strict";
+"use strict";
 
-  var app = app || {};
-  app.APP_ID = "269152071774";
-  app.CLIENT_ID = "269152071774.apps.googleusercontent.com";
-  app.MIMETYPE = "application/vnd.google-apps.drive-sdk." + app.APP_ID;
+var app = angular.module("app", ["ngResource"])
+  .constant("Config", {
+    "APP_ID": "269152071774",
+    "CLIENT_ID": "269152071774.apps.googleusercontent.com",
+    "MIMETYPE": "application/vnd.google-apps.drive-sdk.269152071774"
+  })
+  .constant("Events", {
+    "DOCUMENT_LOADED": "easi18nDocumentLoaded"
+  })
+  .config(["$routeProvider", function ($routeProvider) {
+    $routeProvider
+      .when("/", {
+        templateUrl: "views/home.html",
+        controller: "IndexCtrl"
+      })
+      .otherwise({
+        redirectTo: "/"
+      });
+  }]);
 
-  app.document = null;
-  app.meta = null;
+app.controller("AppCtrl", ["$scope", "Events", function ($scope, Events) {
+  $scope.data = {
+    projectName: ""
+  };
 
-  app.ui = {
+  $scope.$on(Events.DOCUMENT_LOADED, function (event, document, meta) {
+    $scope.data.projectName = meta.title;
+    $scope.$apply();
+  });
+}]);
+
+app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Config, Events) {
+  $scope.document = null;
+  $scope.meta = null;
+  $scope.data = {
+    collaborators: []
+  };
+
+  var fn = {};
+
+  var ui = {
     newProjectSelector: "#newProject",
     openProjectSelector: "#openProject",
     shareProjectSelector: "#shareProjectButton",
     projectNameSelector: "#projectName",
-    collaboratorsSelector: "#collaborators",
-
-    updateProjectName: function () {
-      if (app.meta) {
-        $(app.ui.projectNameSelector).text(" / " + app.meta.title);
-      }
-    },
-
-    updateCollaborators: function () {
-      if (app.document) {
-        $(app.ui.collaboratorsSelector).children().remove();
-        _.forEach(app.document.getCollaborators(), function (collaborator) {
-          console.log(collaborator);
-          var isYou = collaborator.isMe ? " (you)" : "";
-          var li = '<li><i class="icon-user" style="color:' + collaborator.color + ';"></i> ' + collaborator.displayName + isYou + '</li>';
-          $(app.ui.collaboratorsSelector).append(li);
-        });
-      }
-    }
+    collaboratorsSelector: "#collaborators"
   };
 
-  app.collaborators = {
+  var collaborators = {
     onCollaboratorJoined: function () {
-      app.ui.updateCollaborators();
+      $scope.collaborators.update();
     },
     onCollaboratorLeft: function () {
-      app.ui.updateCollaborators();
+      $scope.collaborators.update();
+    },
+    update: function () {
+      $scope.data.collaborators = $scope.document.getCollaborators();
+      $scope.$apply($scope.data.collaborators);
     }
   };
 
@@ -53,7 +69,7 @@ define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtcl
    * Realtime World!', and is named 'text'.
    * @param model {gapi.drive.realtime.Model} the Realtime root model object.
    */
-  app.initializeModel = function (model) {
+  fn.initializeModel = function (model) {
     var string = model.createString("New project content");
     model.getRoot().set("text", string);
   };
@@ -65,18 +81,19 @@ define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtcl
    * and bind it to our string model that we created in initializeModel.
    * @param doc {gapi.drive.realtime.Document} the Realtime document.
    */
-  app.onFileLoaded = function (doc) {
+  fn.onFileLoaded = function (doc) {
     console.log("onFileLoad");
 
-    app.document = doc;
-    rtclient.getFileMetadata(null, function (m) {
-      app.meta = m;
-      app.ui.updateProjectName();
-    });
+    $scope.document = doc;
+    collaborators.update();
 
-    app.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, app.collaborators.onCollaboratorJoined);
-    app.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, app.collaborators.onCollaboratorLeft);
-    app.ui.updateCollaborators();
+    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, collaborators.onCollaboratorJoined);
+    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, collaborators.onCollaboratorLeft);
+
+    rtclient.getFileMetadata(null, function (m) {
+      $scope.meta = m;
+      $scope.$emit(Events.DOCUMENT_LOADED, $scope.document, $scope.meta);
+    });
 
     var string = doc.getModel().getRoot().get("text");
 
@@ -101,59 +118,58 @@ define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtcl
     textArea2.disabled = false;
   };
 
+  // Called when a file has been selected using the Google Picker.
+  fn.openCallback = function (data) {
+    if (data.action === google.picker.Action.PICKED) {
+      var fileId = data.docs[0].id;
+      rtclient.redirectTo(fileId, $scope.realtimeLoader.authorizer.userId);
+    }
+  };
+
   // Opens the Google Picker.
-  app.popupOpen = function () {
+  fn.popupOpen = function () {
     var token = gapi.auth.getToken().access_token;
     var view = new google.picker.View(google.picker.ViewId.DOCS);
-    view.setMimeTypes(app.MIMETYPE);
+    view.setMimeTypes(Config.MIMETYPE);
 
     var picker = new google.picker.PickerBuilder()
       .enableFeature(google.picker.Feature.NAV_HIDDEN)
-      .setAppId(app.APP_ID)
+      .setAppId(Config.APP_ID)
       .setOAuthToken(token)
       .addView(view)
       .addView(new google.picker.DocsUploadView())
-      .setCallback(app.openCallback)
+      .setCallback(fn.openCallback)
       .build();
     picker.setVisible(true);
   };
 
-  // Called when a file has been selected using the Google Picker.
-  app.openCallback = function (data) {
-    if (data.action === google.picker.Action.PICKED) {
-      var fileId = data.docs[0].id;
-      rtclient.redirectTo(fileId, app.realtimeLoader.authorizer.userId);
-    }
-  };
-
   // Popups the Sharing dialog.
-  app.popupShare = function () {
-    var shareClient = new gapi.drive.share.ShareClient(app.APP_ID);
+  fn.popupShare = function () {
+    var shareClient = new gapi.drive.share.ShareClient(Config.APP_ID);
     shareClient.setItemIds([rtclient.params.fileId]);
     shareClient.showSettingsDialog();
   };
 
-  app.connectUi = function () {
-    $(app.ui.openProjectSelector).click(app.popupOpen);
-    $(app.ui.shareProjectSelector).click(app.popupShare);
+  fn.connectUi = function () {
+    $(ui.openProjectSelector).click(fn.popupOpen);
+    $(ui.shareProjectSelector).click(fn.popupShare);
 
     $("#modalCreateProject").on("click", ".btn-primary", function () {
       var fileName = $("#modalCreateProject input").val();
-      console.log(fileName);
-      app.realtimeLoader.createNewFileAndRedirect(fileName);
+      $scope.realtimeLoader.createNewFileAndRedirect(fileName);
     });
   };
 
   /**
    * Options for the Realtime loader.
    */
-  app.options = {
-    appId: app.APP_ID,
+  $scope.options = {
+    appId: Config.APP_ID,
 
     /**
      * Client ID from the APIs Console.
      */
-    clientId: app.CLIENT_ID,
+    clientId: Config.CLIENT_ID,
 
     /**
      * The ID of the button to click to authorize. Must be a DOM element ID.
@@ -173,23 +189,24 @@ define(["lodash", "gapi", "google", "rtclient"], function (_, gapi, google, rtcl
     /**
      * Function to be called when a Realtime model is first created.
      */
-    initializeModel: app.initializeModel,
+    initializeModel: fn.initializeModel,
 
     /**
      * Function to be called every time a Realtime file is loaded.
      */
-    onFileLoaded: app.onFileLoaded
+    onFileLoaded: fn.onFileLoaded
   };
 
   /**
    * Start the Realtime loader with the options.
    */
-  app.start = function () {
-    app.realtimeLoader = new rtclient.RealtimeLoader(app.options);
-    app.connectUi();
+  $scope.start = function () {
+    $scope.realtimeLoader = new rtclient.RealtimeLoader($scope.options);
+    fn.connectUi();
     console.log("Start realtime loader");
-    app.realtimeLoader.start();
+    $scope.realtimeLoader.start();
   };
 
-  return app;
-});
+  // Bootstrap the application
+  google.load("picker", "1", {"callback" : $scope.start});
+}]);
