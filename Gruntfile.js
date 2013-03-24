@@ -234,6 +234,11 @@ module.exports = function (grunt) {
           cwd: '<%= config.app %>/components/modernizr',
           src: ['modernizr.js'],
           dest: '<%= config.distScripts %>/vendor/'
+        }, {
+          expand: true,
+          cwd: '<%= config.app %>',
+          src: ['components/font-awesome/font/*'],
+          dest: '<%= config.dist %>'
         }]
       }
     },
