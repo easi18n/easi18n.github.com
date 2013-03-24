@@ -190,7 +190,7 @@ module.exports = function (grunt) {
       dist: {
         files: {
           '<%= config.distStyles %>/main.css': [
-            '.tmp/styles/{,*/}*.css',
+            '<%= config.tmpStyles %>/{,*/}*.css',
             '<%= config.styles %>/{,*/}*.css'
           ]
         }
@@ -228,6 +228,11 @@ module.exports = function (grunt) {
             '*.{ico,txt}',
             '.htaccess'
           ]
+        }, {
+          expand: true,
+          cwd: '<%= config.app %>/components/modernizr',
+          src: ['modernizr.js'],
+          dest: '<%= config.distScripts %>/vendor/'
         }]
       }
     },
@@ -271,8 +276,8 @@ module.exports = function (grunt) {
     'imagemin',
     'htmlmin',
     'cssmin',
-    'uglify',
     'copy',
+    'uglify',
     'usemin'
   ]);
 
