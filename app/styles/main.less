@@ -7,8 +7,19 @@ body {
   padding-top: 60px;
 }
 
-.navbar .navbar-brand {
-  max-width: none;
+.navbar {
+  .navbar-brand {
+    max-width: none;
+  }
+
+  .nav > li > a {
+    padding-left: 10px;
+    padding-right: 10px;
+
+    i {
+      margin-right: 5px;
+    }
+  }
 }
 
 .modal .close {
@@ -26,10 +37,20 @@ body {
   }
 }
 
-.ng-cloak {
+[ng\:cloak], [ng-cloak], .ng-cloak {
   display: none;
 }
 
 a {
   cursor: pointer;
 }
+
+.row-message, .row-lang {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.authorizeButton[disabled] {
+  display: none;
+}
+

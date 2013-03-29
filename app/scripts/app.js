@@ -18,6 +18,9 @@ var app = angular.module("app", ["ngResource"])
       .otherwise({
         redirectTo: "/"
       });
+  }])
+  .config(['$locationProvider', function ($locationProvider) {
+    $locationProvider.html5Mode(true);
   }]);
 
 app.controller("AppCtrl", ["$scope", "Events", function ($scope, Events) {
@@ -35,10 +38,66 @@ app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Con
   $scope.document = null;
   $scope.meta = null;
   $scope.data = {
-    collaborators: []
+    projectName: "",
+    collaborators: [],
+    messages: [],
+    langs: [],
+    newKey: "",
+    newLang: ""
   };
 
-  var fn = {};
+  var fn = {
+    apply: function (item) {
+      if (!$scope.$$phase) {
+        $scope.$apply(item);
+      }
+    }
+  };
+
+  $scope.hasDocument = function () {
+    return !!$scope.document;
+  };
+
+  $scope.addKey = function () {
+    fn.getMessagesField().set($scope.data.newKey, "");
+    $scope.data.newKey = "";
+  };
+
+  $scope.deleteKey = function (key) {
+    fn.getMessagesField().delete(key);
+  };
+
+  $scope.onMessageChange = function (index) {
+    messages.update(index);
+  };
+
+  $scope.addLang = function () {
+    var newLang = $scope.data.newLang;
+    if (fn.getLangsField().lastIndexOf(newLang) < 0) {
+      fn.getLangsField().push(newLang);
+      $scope.data.newLang = "";
+    }
+  };
+
+  $scope.removeLang = function (index) {
+    fn.getLangsField().remove(index);
+  };
+
+  $scope.updateProjectName = function () {
+    gapi.client.load("drive", "v2", function () {
+      gapi.client.drive.files.patch({
+        "fileId": $scope.meta.id,
+        "resource": {
+          "title": $scope.data.projectName
+        }
+      }).execute(function () {rtclient.redirectTo($scope.meta.id); });
+    });
+  };
+
+  var fields = {
+    MESSAGES_MAP: "messages",
+    LANGS_LIST: "langs"
+  };
 
   var ui = {
     newProjectSelector: "#newProject",
@@ -57,7 +116,40 @@ app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Con
     },
     update: function () {
       $scope.data.collaborators = $scope.document.getCollaborators();
-      $scope.$apply($scope.data.collaborators);
+      fn.apply($scope.data.collaborators);
+    }
+  };
+
+  var messages = {
+    timer: 0,
+    onValueChange: function () {
+      messages.updateUi();
+    },
+    update: function (index) {
+      clearTimeout(messages.timer);
+      messages.timer = setTimeout(function () {
+        fn.getMessagesField().set($scope.data.messages[index][0], $scope.data.messages[index][1]);
+      }, 1000);
+    },
+    updateUi: function () {
+      $scope.data.messages = fn.getMessagesField().items();
+      fn.apply($scope.data.messages);
+    }
+  };
+
+  var langs = {
+    updateUi: function () {
+      $scope.data.langs = fn.getLangsField().asArray();
+      fn.apply($scope.data.langs);
+    },
+    onValuesAdded: function () {
+      langs.updateUi();
+    },
+    onValuesRemoved: function () {
+      langs.updateUi();
+    },
+    onValuesSet: function () {
+      langs.updateUi();
     }
   };
 
@@ -70,8 +162,31 @@ app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Con
    * @param model {gapi.drive.realtime.Model} the Realtime root model object.
    */
   fn.initializeModel = function (model) {
-    var string = model.createString("New project content");
-    model.getRoot().set("text", string);
+    var messagesMap = model.createMap();
+    model.getRoot().set(fields.MESSAGES_MAP, messagesMap);
+
+    var langsList = model.createList();
+    model.getRoot().set(fields.LANGS_LIST, langsList);
+  };
+
+  fn.getModel = function () {
+    return $scope.hasDocument() && $scope.document.getModel() || null;
+  };
+
+  fn.getRoot = function () {
+    return $scope.hasDocument() && fn.getModel().getRoot() || null;
+  };
+
+  fn.getRootField = function (fieldName) {
+    return $scope.hasDocument() && fn.getRoot().get(fieldName) || null;
+  };
+
+  fn.getMessagesField = function () {
+    return $scope.hasDocument() && fn.getRootField(fields.MESSAGES_MAP) || null;
+  };
+
+  fn.getLangsField = function () {
+    return $scope.hasDocument() && fn.getRootField(fields.LANGS_LIST) || null;
   };
 
   /**
@@ -85,37 +200,30 @@ app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Con
     console.log("onFileLoad");
 
     $scope.document = doc;
-    collaborators.update();
-
-    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, collaborators.onCollaboratorJoined);
-    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, collaborators.onCollaboratorLeft);
 
     rtclient.getFileMetadata(null, function (m) {
       $scope.meta = m;
+      $scope.data.projectName = m.title;
       $scope.$emit(Events.DOCUMENT_LOADED, $scope.document, $scope.meta);
     });
 
-    var string = doc.getModel().getRoot().get("text");
+    collaborators.update();
+    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_JOINED, collaborators.onCollaboratorJoined);
+    $scope.document.addEventListener(gapi.drive.realtime.EventType.COLLABORATOR_LEFT, collaborators.onCollaboratorLeft);
 
-    // Keeping one box updated with a String binder.
-    var textArea1 = document.getElementById("editor1");
-    gapi.drive.realtime.databinding.bindString(string, textArea1);
+    var messagesField = fn.getMessagesField();
+    $scope.data.messages = messagesField.items();
+    messagesField.addEventListener(gapi.drive.realtime.EventType.VALUE_CHANGED, messages.onValueChange);
 
-    // Keeping one box updated with a custom EventListener.
-    var textArea2 = document.getElementById("editor2");
-    var updateTextArea2 = function () {
-      textArea2.value = string;
-    };
-    string.addEventListener(gapi.drive.realtime.EventType.TEXT_INSERTED, updateTextArea2);
-    string.addEventListener(gapi.drive.realtime.EventType.TEXT_DELETED, updateTextArea2);
-    textArea2.onkeyup = function () {
-      string.setText(textArea2.value);
-    };
-    updateTextArea2();
+    var langsField = fn.getLangsField();
+    $scope.data.langs = langsField.asArray();
+    langsField.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, langs.onValuesAdded);
+    langsField.addEventListener(gapi.drive.realtime.EventType.VALUES_REMOVED, langs.onValuesRemoved);
+    langsField.addEventListener(gapi.drive.realtime.EventType.VALUES_SET, langs.onValuesSet);
 
-    // Enabling UI Elements.
-    textArea1.disabled = false;
-    textArea2.disabled = false;
+//    gapi.drive.realtime.databinding.bindString(string, textArea1);
+//    string.addEventListener(gapi.drive.realtime.EventType.TEXT_INSERTED, updateTextArea2);
+//    string.addEventListener(gapi.drive.realtime.EventType.TEXT_DELETED, updateTextArea2);
   };
 
   // Called when a file has been selected using the Google Picker.
@@ -179,7 +287,7 @@ app.controller("IndexCtrl", ["$scope", "Config", "Events", function ($scope, Con
     /**
      * Autocreate files right after auth automatically.
      */
-    autoCreate: true,
+    autoCreate: false,
 
     /**
      * Autocreate files right after auth automatically.

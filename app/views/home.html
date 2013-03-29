@@ -1,25 +1,92 @@
-<div class="row">
-  <div class="span12">
-    <p>These text areas are on the same page. You can also <a target="_blank" href="#">open them on separate users'
-      browsers</a> and they will remain synchronized.
-    </p>
+<div class="ng-cloak" data-ng-show="hasDocument()">
+  <div class="row">
+    <h1>Messages</h1>
+    <form data-ng-submit="addKey()">
+      <div class="input-group span6">
+        <input type="text" placeholder="New key" data-ng-model="data.newKey"/>
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-primary">Add</button>
+        </span>
+      </div>
+    </form>
+  </div>
+
+  <div class="row row-message" data-ng-repeat="message in data.messages">
+    <div class="span4">
+      <label for="messagesValue{{message.$$hashKey}}">{{message.0}}</label>
+    </div>
+
+    <div class="input-group span8">
+      <input id="messagesValue{{message.$$hashKey}}" type="text" data-ng-model="message.1" data-ng-change="onMessageChange($index)"/>
+      <span class="input-group-btn">
+        <button type="button" class="btn btn-danger" data-ng-click="deleteKey(message.0)">Remove</button>
+      </span>
+    </div>
+  </div>
+
+  <div class="well">
+    <h3>Collaborators</h3>
+    <ul id="collaborators" class="list-unstyled">
+      <li data-ng-repeat="collaborator in data.collaborators">
+        <i class="icon-user" style="color:{{collaborator.color}}"></i>{{collaborator.displayName}}<span data-ng-show="collaborator.isMe"> (you)</span>
+      </li>
+    </ul>
   </div>
 </div>
-<div class="row">
-  <div class="span4">
-    <textarea id="editor1" rows="15" cols="50" disabled="true"></textarea>
+
+
+<div class="row ng-cloak" data-ng-hide="hasDocument()">
+  <div class="span12">
+    Create a new project by using the top navbar.
   </div>
-  <div class="span4">
-    <textarea id="editor2" rows="15" cols="50" disabled="true"></textarea>
-  </div>
-  <div class="span4">
-    <div class="well">
-      <h3>Collaborators</h3>
-      <ul id="collaborators" class="list-unstyled">
-        <li data-ng-repeat="collaborator in data.collaborators">
-          <i class="icon-user" style="color:{{collaborator.color}}"></i>{{collaborator.displayName}}<span data-ng-show="collaborator.isMe"> (you)</span>
-        </li>
-      </ul>
+</div>
+
+<div id="modalConfigureProject" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Configure project</h4>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal" data-ng-submit="updateProjectName()">
+          <div class="control-group">
+            <label class="control-label" for="configureProjectName">Project name</label>
+            <div class="controls">
+              <div class="input-group">
+                <input type="text" id="configureProjectName" placeholder="Just name it!" data-ng-model="data.projectName"/>
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">Update</button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <form class="form-horizontal" data-ng-submit="addLang()">
+          <div class="control-group">
+            <label class="control-label" for="configureAddLang">Add lang</label>
+            <div class="controls">
+              <div class="input-group">
+                <input type="text" id="configureAddLang" placeholder="Enter the lang code" data-ng-model="data.newLang">
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">Add</button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div class="row row-lang" data-ng-repeat="lang in data.langs">
+          <div class="span6">{{lang}}</div>
+          <div class="span6">
+            <button type="button" class="btn btn-danger" data-ng-click="removeLang($index)">Remove</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Done</a>
+      </div>
     </div>
   </div>
 </div>
