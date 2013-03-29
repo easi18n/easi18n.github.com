@@ -29,18 +29,22 @@
         <ul class="nav">
           <li class="divider"></li>
           <li>
-            <a id="newProject" data-toggle="modal" data-target="#modalCreateProject">New project</a>
+            <a id="newProject" data-toggle="modal" data-target="#modalCreateProject"><i class="icon-plus icon-large"></i>New</a>
           </li>
           <li class="divider"></li>
           <li>
-            <a id="openProject">Open project</a>
+            <a id="openProject"><i class="icon-folder-open icon-large"></i>Open</a>
+          </li>
+          <li class="divider"></li>
+          <li>
+            <a id="configureProject" data-toggle="modal" data-target="#modalConfigureProject"><i class="icon-cog icon-large"></i>Configure</a>
           </li>
           <li class="divider"></li>
         </ul>
 
         <form class="navbar-form pull-right">
           <button id="shareProjectButton" class="btn btn-success" type="button">Share</button>
-          <button id="authorizeButton" class="btn btn-primary" type="button" disabled="disabled">You must authorize</button>
+          <button id="authorizeButton" class="btn btn-primary authorizeButton" type="button" disabled="disabled">You must authorize</button>
         </form>
       </div>
     </div>
